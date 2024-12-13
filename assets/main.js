@@ -24,10 +24,83 @@ const player = {
     this.position.y += this.velocity.y;
     this.sides.bottom = this.position.y + this.height;
 
+    // Handle gravity only if the player is not colliding with the ground (brick or canvas floor)
     if (this.sides.bottom + this.velocity.y < canvas.height) {
-      this.velocity.y += this.gravity;
+      this.velocity.y += this.gravity; // Apply gravity
     } else {
-      this.velocity.y = 0;
+      this.velocity.y = 0; // Stop downward velocity if at the bottom of the canvas
+    }
+
+    // Check for collision with bricks after updating the position
+    brick.checkCollision();
+  }
+};
+
+// Brick object
+const brick = {
+  position: { x: 400, y: 400 },
+  width: 50,
+  height: 200,
+
+  draw: function() {
+    c.fillStyle = 'red';
+    c.fillRect(this.position.x, this.position.y, this.width, this.height);
+  },
+
+  // Collision check with the player
+  checkCollision: function() {
+    // Bottom collision (falling)
+    if (
+      player.position.x + player.width > this.position.x &&
+      player.position.x < this.position.x + this.width &&
+      player.position.y + player.height > this.position.y &&
+      player.position.y + player.height <= this.position.y + player.velocity.y // Only consider the bottom when falling
+    ) {
+      // Stop downward velocity (collision with top of brick)
+      if (player.velocity.y > 0) {
+        player.velocity.y = 0;
+        player.position.y = this.position.y - player.height; // Place player on top of brick
+      }
+    }
+
+    // Top collision (jumping)
+    if (
+      player.position.x + player.width > this.position.x &&
+      player.position.x < this.position.x + this.width &&
+      player.position.y < this.position.y + this.height &&
+      player.position.y + player.height > this.position.y
+    ) {
+      // Stop upward movement (collision with bottom of brick)
+      if (player.velocity.y < 0) {
+        player.position.y = this.position.y + this.height; // Place player below the brick
+        player.velocity.y = 0; // Stop upward movement
+      }
+    }
+
+    // Left collision
+    if (
+      player.position.y + player.height > this.position.y &&
+      player.position.y < this.position.y + this.height &&
+      player.position.x < this.position.x + this.width &&
+      player.position.x + player.width > this.position.x &&
+      player.velocity.x < 0 // Moving left
+    ) {
+      // Prevent player from passing through the left side of the brick
+      player.position.x = this.position.x + this.width; // Place player to the right of the brick
+      player.velocity.x = 0; // Stop horizontal movement
+    }
+
+    // Right collision
+    if (
+      player.position.y + player.height > this.position.y &&
+      player.position.y < this.position.y + this.height &&
+      player.position.x + player.width > this.position.x &&
+      player.position.x < this.position.x + this.width &&
+      player.velocity.x > 0 // Moving right
+    ) {
+      // Prevent player from passing through the right side of the brick
+      player.position.x = this.position.x - player.width; // Place player to the left of the brick
+      player.velocity.x = 0; // Stop horizontal movement
     }
   }
 };
@@ -90,6 +163,9 @@ function animate() {
 
   player.draw(); // Draw the player
   player.update(); // Update player state (gravity, position)
+  
+  brick.draw(); // Draw the brick
+  brick.checkCollision(); // Check for collision with the brick
 }
 
 // Initialize game
