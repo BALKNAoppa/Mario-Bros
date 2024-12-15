@@ -5,12 +5,30 @@ const c = canvas.getContext('2d');
 canvas.width = 1100;
 canvas.height = 400;
 
-// Playeriin model
-const playerImage = new Image();
-playerImage.src = 'assets/mario-assets/mario/small/mario-idle.png';
+const testlvl = new Image();
+testlvl.src = 'assets/mario-assets/test-lvl.png'; // Testing level for canvas
 
-const goombaImage = new Image();
-goombaImage.src = 'assets/mario-assets/goomba-l.png'; // Goomba model
+// Playeriin model
+const marioIdle = new Image();
+marioIdle.src = 'assets/mario-assets/mario/small/mario-idle.png'; // Mario Idle
+
+const marioRun1 = new Image();
+marioRun1.src = 'assets/mario-assets/mario/small/mario-run1.png'; // Mario run 1
+
+const marioRun2 = new Image();
+marioRun2.src = 'assets/mario-assets/mario/small/mario-run2.png'; // Mario run 2
+
+const marioRun3 = new Image();
+marioRun3.src = 'assets/mario-assets/mario/small/mario-run3.png'; // Mario run 3
+
+const marioJump = new Image();
+marioJump.src = 'assets/mario-assets/mario/small/mario-jump.png'; // Mario run 4
+
+const goombaImageL = new Image();
+goombaImageL.src = 'assets/mario-assets/goomba-l.png'; // Goomba left
+
+const goombaImageR = new Image();
+goombaImageR.src = 'assets/mario-assets/goomba-r.png'; // Goomba right
 
 // Objectuudiin model
 
@@ -30,13 +48,34 @@ obstacleImageL.src = 'assets/mario-assets/luckybox.gif'; // Luckybox
 const player = {
   position: { x: 100, y: 100 },
   velocity: { x: 0, y: 0 },
-  width: 30,
-  height: 40,
-  gravity: 0.2,
-  jumpVelocity: -8,
+  width: 25,
+  height: 25,
+  gravity: 0.15,
+  jumpVelocity: -7,
+  ani: [marioRun1, marioRun2, marioRun3], // Mario running animation array
+  marioIdle: marioIdle,
+  frameIndex: 0,
+  frameCounter: 0,
+  dir: 'right', // Default right checking Left ! Right
 
-  draw: function () { // img         x                y          width         height
-    c.drawImage(playerImage, this.position.x, this.position.y, this.width, this.height);
+  draw: function () {
+    c.save(); // Save the canvas state
+
+    // Flip the player when moving left
+    if (this.dir === 'left') {
+      c.scale(-1, 1); // Flip horizontally
+      c.drawImage(
+        this.marioIdle,
+        -this.position.x - this.width, // Adjust for flipped image
+        this.position.y,
+        this.width,
+        this.height
+      );
+    } else {
+      c.drawImage(this.marioIdle, this.position.x, this.position.y, this.width, this.height);
+    }
+
+    c.restore(); // Restore the canvas state
 
     // Debug border
     c.strokeStyle = 'green';
@@ -44,18 +83,32 @@ const player = {
   },
 
   update: function () {
-    // Zuun baruun
+    // Update position
     this.position.x += this.velocity.x;
-
-    // Usreh
     this.position.y += this.velocity.y;
 
-    // Gravity
-    if (this.position.y + this.height < canvas.height) {
+    // Player gravity // Velocity = hurd // Gravity = undur
+    if (this.position.y + this.height < canvas.height - 75) { // 75 Spacing from bottom ground canvas
       this.velocity.y += this.gravity;
     } else {
       this.velocity.y = 0;
-      this.position.y = canvas.height - this.height;
+      this.position.y = canvas.height - this.height - 75; // 75 Spacing from bottom ground canvas
+    }
+
+    // If player jump change idle img to Jumping img
+    if (this.velocity.y < 0 || this.velocity.y > 0) {
+      this.marioIdle = marioJump;
+    } else if (this.velocity.x !== 0) {
+
+      // If player running change idle img to Jumping img
+      this.frameCounter++;
+      if (this.frameCounter % 20 === 0) { // Zurag soligdoh hurd default 20 frame
+        this.frameIndex = (this.frameIndex + 1) % this.ani.length;
+        this.marioIdle = this.ani[this.frameIndex];
+      }
+    } else {
+      this.marioIdle = marioIdle; // Yuch hiigeegu uyd butsd idle img
+
     }
   }
 };
@@ -63,13 +116,14 @@ const player = {
 // Goomba object
 const goomba = {
   position: { x: 800, y: 370 },
-  velocity: { x: 0.4, y: 0 }, // goomba speed
-  width: 30,
-  height: 30,
+  velocity: { x: 0.4, y: 0 }, // Goomba speed
+  width: 26,
+  height: 26,
   gravity: 0.2,
+  goombaIdle: goombaImageL, // Goomba default img
 
   draw: function () {
-    c.drawImage(goombaImage, this.position.x, this.position.y, this.width, this.height);
+    c.drawImage(this.goombaIdle, this.position.x, this.position.y, this.width, this.height);
 
     // Debug border
     c.strokeStyle = 'red';
@@ -77,21 +131,36 @@ const goomba = {
   },
 
   update: function () {
-    // zuun baruun
+    // Zuun baruun hudulguun
     this.position.x += this.velocity.x;
 
-    // deeshee dooshoo
+    // Usreh unah (odoohondoo hereggu)
     this.position.y += this.velocity.y;
 
-    // // Gravity effect
-    // if (this.position.y + this.height < canvas.height) {
-    //   this.velocity.y += this.gravity;
-    // } else {
-    //   this.velocity.y = 0;
-    //   this.position.y = canvas.height - this.height;
-    // }
+    // Gravity
+    if (this.position.y + this.height < canvas.height - 75) { // 75 Spacing from bottom ground canvas
+      this.velocity.y += this.gravity;
+    } else {
+      this.velocity.y = 0;
+      this.position.y = canvas.height - this.height - 75; // 75 Spacing from bottom ground canvas
+    }
+  },
+
+
+  // Animation
+  toggleImage: function () {
+    if (this.goombaIdle === goombaImageL) { // Goomba idle
+      this.goombaIdle = goombaImageR; // Idle iin utgiig right img bolgono
+    } else {
+      this.goombaIdle = goombaImageL; // Idle iin utgiig left img bolgono
+    }
   }
+
 };
+// Change animation by inverval
+setInterval(() => {
+  goomba.toggleImage();
+}, 300);
 
 
 // Controller keys boolean check (default)
@@ -104,13 +173,15 @@ const keys = {
 function handleKeyDown(e) {
   switch (e.key) {
     case 'w':
-      if (player.velocity.y === 0) player.velocity.y = player.jumpVelocity; // if player gazart hursn uyd usrene
+      if (player.velocity.y === 0) player.velocity.y = player.jumpVelocity;
       break;
     case 'a':
       keys.a.pressed = true;
+      player.dir = 'left'; // Zuun
       break;
     case 'd':
       keys.d.pressed = true;
+      player.dir = 'right'; // Baruun
       break;
   }
 }
@@ -128,25 +199,24 @@ function handleKeyUp(e) {
 }
 
 function updatePlayerVelocity() {
-  player.velocity.x = 0; // Player stop
-  // Movement speed
-  if (keys.a.pressed) player.velocity.x = -1;
-  if (keys.d.pressed) player.velocity.x = 1;
+  player.velocity.x = 0; // Stop movement by default
+  if (keys.a.pressed) player.velocity.x = -1; // Move left
+  if (keys.d.pressed) player.velocity.x = 1; // Move right
 }
 
 // Clear the canvas
 function clearCanvas() {
-  c.fillStyle = '#5C94FC';
-  c.fillRect(0, 0, canvas.width, canvas.height);
+  c.drawImage(testlvl, 0, 0, canvas.width, canvas.height);
+
 }
 
 // Obstacles
 const obstacles = [
-  { position: { x: 600, y: 320 }, width: 80, height: 80, image: obstacleImage1 }, // Small pipe
-  { position: { x: 850, y: 280 }, width: 80, height: 120, image: obstacleImage2 }, // Medium pipe
-  { position: { x: 300, y: 250 }, width: 30, height: 30, image: obstacleImage0 }, // Brick
-  { position: { x: 330, y: 250 }, width: 30, height: 30, image: obstacleImage0 }, // Brick
-  { position: { x: 360, y: 250 }, width: 30, height: 30, image: obstacleImageL } // Luckybox
+  { position: { x: 600, y: 275 }, width: 50, height: 50, image: obstacleImage1 }, // Small pipe
+  { position: { x: 850, y: 245 }, width: 50, height: 80, image: obstacleImage2 }, // Medium pipe
+  { position: { x: 400, y: 224 }, width: 27, height: 27, image: obstacleImage0 }, // Brick
+  { position: { x: 454, y: 224 }, width: 27, height: 27, image: obstacleImage0 }, // Brick
+  { position: { x: 427, y: 224 }, width: 27, height: 27, image: obstacleImageL } // Luckybox
 ];
 
 // Draw obstacles
