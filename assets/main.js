@@ -42,7 +42,26 @@ const obstacleImage0 = new Image();
 obstacleImage0.src = 'assets/mario-assets/brick.png'; // Brick
 
 const obstacleImageL = new Image();
-obstacleImageL.src = 'assets/mario-assets/luckybox.gif'; // Luckybox
+obstacleImageL.src = 'assets/mario-assets/luckybox/1.png'; // Luckybox default
+
+// Luckybox array
+const luckyBoxImages = [
+  'assets/mario-assets/luckybox/1.png',
+  'assets/mario-assets/luckybox/2.png',
+  'assets/mario-assets/luckybox/3.png',
+  'assets/mario-assets/luckybox/4.png',
+  'assets/mario-assets/luckybox/5.png'
+];
+
+let luckyBoxIndex = 0;
+
+// Luckybox animate function
+function updateLuckyBoxImage() {
+  luckyBoxIndex = (luckyBoxIndex + 1) % luckyBoxImages.length; // Array
+  obstacleImageL.src = luckyBoxImages[luckyBoxIndex]; // Update the lucky box image
+}
+
+setInterval(updateLuckyBoxImage, 190);
 
 // Player object
 const player = {
@@ -216,7 +235,7 @@ const obstacles = [
   { position: { x: 850, y: 245 }, width: 50, height: 80, image: obstacleImage2 }, // Medium pipe
   { position: { x: 400, y: 224 }, width: 27, height: 27, image: obstacleImage0 }, // Brick
   { position: { x: 454, y: 224 }, width: 27, height: 27, image: obstacleImage0 }, // Brick
-  { position: { x: 427, y: 224 }, width: 27, height: 27, image: obstacleImageL } // Luckybox
+  { position: { x: 427, y: 224 }, width: 27, height: 27.5, image: obstacleImageL } // Luckybox
 ];
 
 // Draw obstacles
