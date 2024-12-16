@@ -44,6 +44,9 @@ obstacleImage0.src = 'assets/mario-assets/brick.png'; // Brick
 const obstacleImageL = new Image();
 obstacleImageL.src = 'assets/mario-assets/luckybox/1.png'; // Luckybox default
 
+const itemBuff = new Image();
+itemBuff.src = 'assets/mario-assets/buff-mushroom.png' // Buff mushroom
+
 // Luckybox array
 const luckyBoxImages = [
   'assets/mario-assets/luckybox/1.png',
@@ -69,8 +72,8 @@ const player = {
   velocity: { x: 0, y: 0 },
   width: 25,
   height: 25,
-  gravity: 0.15,
-  jumpVelocity: -7,
+  gravity: 0.40,
+  jumpVelocity: -10,
   ani: [marioRun1, marioRun2, marioRun3], // Mario running animation array
   marioIdle: marioIdle,
   frameIndex: 0,
@@ -182,52 +185,38 @@ setInterval(() => {
 }, 300);
 
 
-// Controller keys boolean check (default)
-const keys = {
-  w: { pressed: false },
-  a: { pressed: false },
-  d: { pressed: false }
+// Goomba object
+const itembuff = {
+  position: { x: 427, y: 200 },
+  velocity: { x: 0.4, y: 0 }, // Goomba speed
+  width: 26,
+  height: 26,
+  gravity: 0.2,
+  default: itemBuff, // Goomba default img
+
+  draw: function () {
+    c.drawImage(this.default, this.position.x, this.position.y, this.width, this.height);
+
+    // Debug border
+  },
+
+  update: function () {
+    // Zuun baruun hudulguun
+    this.position.x += this.velocity.x;
+
+    // Usreh unah (odoohondoo hereggu)
+    this.position.y += this.velocity.y;
+
+    // Gravity
+    if (this.position.y + this.height < canvas.height - 75) { // 75 Spacing from bottom ground canvas
+      this.velocity.y += this.gravity;
+    } else {
+      this.velocity.y = 0;
+      this.position.y = canvas.height - this.height - 75; // 75 Spacing from bottom ground canvas
+    }
+  },
+
 };
-
-function handleKeyDown(e) {
-  switch (e.key) {
-    case 'w':
-      if (player.velocity.y === 0) player.velocity.y = player.jumpVelocity;
-      break;
-    case 'a':
-      keys.a.pressed = true;
-      player.dir = 'left'; // Zuun
-      break;
-    case 'd':
-      keys.d.pressed = true;
-      player.dir = 'right'; // Baruun
-      break;
-  }
-}
-
-// Key up listener
-function handleKeyUp(e) {
-  switch (e.key) {
-    case 'a':
-      keys.a.pressed = false;
-      break;
-    case 'd':
-      keys.d.pressed = false;
-      break;
-  }
-}
-
-function updatePlayerVelocity() {
-  player.velocity.x = 0; // Stop movement by default
-  if (keys.a.pressed) player.velocity.x = -1; // Move left
-  if (keys.d.pressed) player.velocity.x = 1; // Move right
-}
-
-// Clear the canvas
-function clearCanvas() {
-  c.drawImage(testlvl, 0, 0, canvas.width, canvas.height);
-
-}
 
 // Obstacles
 const obstacles = [
@@ -282,6 +271,7 @@ function resolveCollisions() {
         player.position.y + player.height <= obstacle.position.y &&
         player.position.y + player.height + player.velocity.y >= obstacle.position.y
       ) {
+        player.gravity = 0;
         player.velocity.y = 0; // Stop falling
         player.position.y = obstacle.position.y - player.height; // Snap to obstacle top
       }
@@ -296,6 +286,62 @@ function resolveCollisions() {
       }
     }
   });
+}
+
+
+// Controller keys boolean check (default)
+const keys = {
+  w: { pressed: false },
+  a: { pressed: false },
+  d: { pressed: false }
+};
+
+function handleKeyDown(e) {
+  switch (e.key) {
+    case 'w':
+      if (player.velocity.y === 0){ player.velocity.y = player.jumpVelocity; player.gravity = 0.40 }
+      break;
+    case 'a':
+      keys.a.pressed = true;
+      player.gravity = 0.40;
+      player.dir = 'left'; // Zuun
+      break;
+    case 'd':
+      keys.d.pressed = true;
+      player.gravity = 0.40;
+      player.dir = 'right'; // Baruun
+      break;
+  }
+}
+
+// Key up listener
+function handleKeyUp(e) {
+  switch (e.key) {
+    case 'a':
+      keys.a.pressed = false;
+      break;
+    case 'd':
+      keys.d.pressed = false;
+      break;
+  }
+}
+
+if (keys.w.pressed === true, keys.a.pressed === true, keys.d.pressed === true) {
+  player.gravity = 0.15
+  console.log('test');
+  
+}
+
+function updatePlayerVelocity() {
+  player.velocity.x = 0; // Stop movement by default
+  if (keys.a.pressed) player.velocity.x = -1; // Move left
+  if (keys.d.pressed) player.velocity.x = 1; // Move right
+}
+
+// Clear the canvas
+function clearCanvas() {
+  c.drawImage(testlvl, 0, 0, canvas.width, canvas.height);
+
 }
 
 // Collision Detection for Goomba
