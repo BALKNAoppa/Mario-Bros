@@ -1,3 +1,77 @@
+// Audio Import
+const backgroundMusic = new Audio();
+backgroundMusic.src = 'assets/mario-assets/sfx/mario-theme.mp3'; // Mario Theme
+const jumpSound = new Audio();
+jumpSound.src = 'assets/mario-assets/sfx/mario-jump.mp3'; // Jump Sound
+const coinSound = new Audio();
+coinSound.src = 'assets/mario-assets/sfx/coin.wav'; // Coin Sound
+const buffSound = new Audio();
+buffSound.src = 'assets/mario-assets/sfx/mushroom-eat.wav'; // GameOver
+const gameOverSound = new Audio();
+gameOverSound.src = 'assets/mario-assets/sfx/gameover.wav'; // GameOver
+
+let snd = document.querySelector('#snd');
+
+let sndOn = new Image();
+sndOn.src = 'assets/mario-assets/snd-on.png'; // Sound on
+let sndOff = new Image();
+sndOff.src = 'assets/mario-assets/snd-off.png'; // Sound off
+
+// Start screen
+let gameStarted = false;
+const startBtn = document.getElementById("start-btn");
+const startScreen = document.getElementById("start-screen");
+
+
+// Function to start the game
+function startGame() {
+  startScreen.style.display = "none";
+  gameStarted = true;
+  backgroundMusic.play().catch((error) => {
+    console.error("Audio play failed:", error);
+
+  });
+  animate();
+  startCountdown();
+}
+startBtn.addEventListener("click", () => {
+  if (!gameStarted) {
+    startGame();
+  }
+});
+document.addEventListener("keydown", (event) => {
+  if ((event.key === "Enter" || event.key === " ") && !gameStarted) {
+    startGame();
+  }
+});
+backgroundMusic.addEventListener('canplaythrough', () => {
+  console.log('Background music is ready to play');
+});
+
+
+// Sound toggle button and logic
+const soundToggleButton = document.getElementById('sound-toggle-btn');
+let isSoundOn = true;
+function toggleSound() {
+  isSoundOn = !isSoundOn;
+  if (isSoundOn) {
+    backgroundMusic.play().catch((error) => {
+      console.error("Background music play failed:", error);
+    });
+    jumpSound.volume = 1;
+    coinSound.volume = 1;
+    gameOverSound.volume = 1;
+    soundToggleButton.textContent = 'SOUND ON';
+  } else {
+    backgroundMusic.pause();
+    jumpSound.volume = 0;
+    coinSound.volume = 0;
+    gameOverSound.volume = 0;
+    soundToggleButton.textContent = 'SOUND OFF';
+  }
+}
+soundToggleButton.addEventListener('click', toggleSound);
+
 const canvas = document.querySelector('canvas');
 const c = canvas.getContext('2d');
 
@@ -5,70 +79,51 @@ const c = canvas.getContext('2d');
 canvas.width = 1100;
 canvas.height = 400;
 
-
+// Welcome Sign
 const welcomefield = new Image();
 welcomefield.src = 'assets/mario-assets/test2.png'
-
+//Test Lvl
 const testlvl = new Image();
-testlvl.src = 'assets/mario-assets/test-lvl.png'; // Testing level for canvas
-
+testlvl.src = 'assets/mario-assets/test-lvl.png';
 // Playeriin model
 const marioIdle = new Image();
 marioIdle.src = 'assets/mario-assets/mario/small/mario-idle.png'; // Mario Idle
-
 const marioRun1 = new Image();
 marioRun1.src = 'assets/mario-assets/mario/small/mario-run1.png'; // Mario run 1
-
 const marioRun2 = new Image();
 marioRun2.src = 'assets/mario-assets/mario/small/mario-run2.png'; // Mario run 2
-
 const marioRun3 = new Image();
 marioRun3.src = 'assets/mario-assets/mario/small/mario-run3.png'; // Mario run 3
-
 const marioJump = new Image();
 marioJump.src = 'assets/mario-assets/mario/small/mario-jump.png'; // Mario run 4
-
 const goombaImageL = new Image();
 goombaImageL.src = 'assets/mario-assets/goomba-l.png'; // Goomba left
-
 const goombaImageR = new Image();
 goombaImageR.src = 'assets/mario-assets/goomba-r.png'; // Goomba right
 
-ani: [marioRun1, marioRun2, marioRun3]
-
-// Player png big
+// Buffed Player
 const marioIdleB = new Image();
 marioIdleB.src = 'assets/mario-assets/mario/big/bmario-idle.png'; // Mario Idle BIG
-
 const marioRun1B = new Image();
 marioRun1B.src = 'assets/mario-assets/mario/big/bmario-run1.png'; // Mario run 1 BIG
-
 const marioRun2B = new Image();
 marioRun2B.src = 'assets/mario-assets/mario/big/bmario-run2.png'; // Mario run 2 BIG
-
 const marioRun3B = new Image();
 marioRun3B.src = 'assets/mario-assets/mario/big/bmario-run3.png'; // Mario run 3 BIG
-
 const marioJumpB = new Image();
 marioJumpB.src = 'assets/mario-assets/mario/big/bmario-jump.png'; // Mario run 4 BIG
 
 // Objectuudiin model
-
 const obstacleImage1 = new Image();
 obstacleImage1.src = 'assets/mario-assets/pipe-s.png'; // Small Pipe
-
 const obstacleImage2 = new Image();
 obstacleImage2.src = 'assets/mario-assets/pipe-m.png'; // Medium pipe
-
 const obstacleImage0 = new Image();
 obstacleImage0.src = 'assets/mario-assets/brick.png'; // Brick
-
 const obstacleImageL = new Image();
 obstacleImageL.src = 'assets/mario-assets/luckybox/1.png'; // Luckybox default
-
 const obstacleEmpty = new Image();
 obstacleEmpty.src = 'assets/mario-assets/empty.png'; // Luckybox default
-
 const itemBuff = new Image();
 itemBuff.src = 'assets/mario-assets/buff-mushroom.png' // Buff mushroom
 
@@ -81,7 +136,7 @@ const luckyBoxImages = [
   'assets/mario-assets/luckybox/5.png'
 ];
 
-//Welcome field
+// Welcome Sign
 const title = {
   position: { x: 35, y: 25 },
   width: 250,
@@ -91,14 +146,12 @@ const title = {
     c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
   }
 }
- 
-//Count down timer
+
+// Timer (Stat)
 let timeRemaining = 400;
 function formatTime(seconds) {
-  const minutes = Math.floor(seconds);
   const remainingSeconds = seconds;
   if (remainingSeconds < 10) {
-    remainingSeconds = '0' + remainingSeconds;
   }
   return remainingSeconds;
 }
@@ -114,26 +167,30 @@ function startCountdown() {
     }
   }, 1000);
 }
+
+// Timer Text Style etc
 function drawCountdownTimer() {
-  // c.font = 'bold italic 40px ';
   c.font = "20px 'Press Start 2P', cursive";
   c.fillStyle = 'white';
   c.textAlign = 'left';
   c.textBaseline = 'top';
- 
+
   c.fillText('Time', 800, 15);
   c.fillText(formatTime(timeRemaining), 810, 45);
+  c.font = "15px 'Press Start 2P', cursive";
+
+  // Developers
+
+  c.fillText('Ariuka,', 40, 185);
+  c.fillText('Babu,', 40, 210);
+  c.fillText('Baagii,', 40, 235);
+  c.fillText(' Amurlin', 150, 185);
+  c.fillText('Odko', 165, 210);
+  c.fillText('Battur', 165, 235);
 }
 
-let luckyBoxIndex = 0;
-
-// Luckybox animate function
-function updateLuckyBoxImage() {
-  luckyBoxIndex = (luckyBoxIndex + 1) % luckyBoxImages.length; // Array
-  obstacleImageL.src = luckyBoxImages[luckyBoxIndex]; // Update the lucky box image
-}
-
-setInterval(updateLuckyBoxImage, 190);
+// Game Over
+let gameOver = false;
 
 // Player object
 const player = {
@@ -148,17 +205,17 @@ const player = {
   frameIndex: 0,
   frameCounter: 0,
   dir: 'right', // Default right checking Left ! Right
-  hitLuckyBox: false, // New flag to track if the player hit the lucky box
-  isBuffed: false, // New flag for buffed state
+  hitLuckyBox: false, // Checking player if hit lucky box
+  isBuffed: false, // Buff State check
   draw: function () {
     c.save(); // Save the canvas state
 
-    // Flip the player when moving left
+    // Reverse player to left
     if (this.dir === 'left') {
-      c.scale(-1, 1); // Flip horizontally
+      c.scale(-1, 1); // Flip
       c.drawImage(
         this.marioIdle,
-        -this.position.x - this.width, // Adjust for flipped image
+        -this.position.x - this.width,
         this.position.y,
         this.width,
         this.height
@@ -166,12 +223,7 @@ const player = {
     } else {
       c.drawImage(this.marioIdle, this.position.x, this.position.y, this.width, this.height);
     }
-
     c.restore(); // Restore the canvas state
-
-    // Debug border
-    c.strokeStyle = 'green';
-    c.strokeRect(this.position.x, this.position.y, this.width, this.height);
   },
 
   update: function () {
@@ -213,14 +265,10 @@ const goomba = {
   gravity: 0.2,
   goombaIdle: goombaImageL, // Goomba default img
 
-  draw: function () {
+  draw: function () { // Draw in canvas
     c.drawImage(this.goombaIdle, this.position.x, this.position.y, this.width, this.height);
-
-    // Debug border
-    c.strokeStyle = 'red';
-    c.strokeRect(this.position.x, this.position.y, this.width, this.height);
   },
-  update: function () {
+  update: function () { // Update in canvas
     // Zuun baruun hudulguun
     this.position.x += this.velocity.x;
 
@@ -243,24 +291,24 @@ const goomba = {
       this.goombaIdle = goombaImageL; // Idle iin utgiig left img bolgono
     }
   }
-
 };
-// Change animation by inverval
+
+// Goomba Sprite change left right with interval
 setInterval(() => {
   goomba.toggleImage();
 }, 300);
 
 
-// itembuff object
+// ItemBuff object
 const itembuff = {
   position: { x: 427, y: 100 },
-  velocity: { x: 0.4, y: 0 }, // Goomba speed
+  velocity: { x: 0.4, y: 0 }, // Buff Mushroom object
   width: 26,
-  height: 26, // Initial height is 0 for growing animation
-  maxHeight: 30, // Max height for the growing item buff
+  height: 26,
+  maxHeight: 30, // Max grow height
   gravity: 0.2,
-  goombaIdle: itemBuff, // Goomba default img
-  visible: false, // Whether the item buff is visible or not
+  goombaIdle: itemBuff, // Default
+  visible: false, // Buff visibility
 
   draw: function () {
     c.drawImage(this.goombaIdle, this.position.x, this.position.y, this.width, this.height);
@@ -291,6 +339,14 @@ const itembuff = {
 };
 
 
+// Luckybox animate function
+let luckyBoxIndex = 0;
+function updateLuckyBoxImage() {
+  luckyBoxIndex = (luckyBoxIndex + 1) % luckyBoxImages.length; // Array
+  obstacleImageL.src = luckyBoxImages[luckyBoxIndex]; // Update the lucky box image
+}
+setInterval(updateLuckyBoxImage, 190);
+
 const luckybox = {
   position: { x: 427, y: 224 },
   width: 27,
@@ -315,7 +371,7 @@ function drawObstacles() {
   obstacles.forEach(obstacle => {
     c.drawImage(obstacle.image, obstacle.position.x, obstacle.position.y, obstacle.width, obstacle.height);
   });
-  luckybox.draw();
+  luckybox.draw(); // Luckybox draw
   itembuff.draw(); // Draw the item buff
 }
 
@@ -372,7 +428,6 @@ function resolveCollisions() {
         player.position.y = obstacle.position.y + obstacle.height; // Snap below obstacle
         // Player hits the lucky box from below
         if (obstacle.image === obstacleImageL) { // Check if it's the lucky box
-          console.log('ds')
           itembuff.visible = true; // Show the item buff
           luckybox.image = obstacleEmpty
         }
@@ -387,11 +442,12 @@ function resolveCollisions() {
 
       // Player buff check
       if (!player.isBuffed) {
+        buffSound.play()
         player.isBuffed = true; // Set the player as buffed
         itembuff.visible = false;
         itembuff.height = 0;
-        player.width = 32; // Increase the player size (for big Mario)
-        player.height = 60; // Increase the player height (for big Mario)
+        player.width = 26; // Increase the player size (for big Mario)
+        player.height = 40; // Increase the player height (for big Mario)
         ani: [marioRun1B, marioRun2B, marioRun3B]; // Mario running animation array
         marioIdle: marioIdleB;
       }
@@ -407,10 +463,12 @@ const keys = {
   d: { pressed: false }
 };
 
+// Key down listener
 function handleKeyDown(e) {
   switch (e.key) {
     case 'w':
       if (player.velocity.y === 0) { player.velocity.y = player.jumpVelocity; player.gravity = 0.40 }
+      jumpSound.play()
       break;
     case 'a':
       keys.a.pressed = true;
@@ -447,7 +505,7 @@ function clearCanvas() {
 
 }
 
-// Collision Detection for Goomba
+// Collision Detection for Goomba (CHATGPT)
 function resolveGoombaCollisions() {
   obstacles.forEach(obstacle => {
     // Horizontal collisions (left and right)
@@ -501,7 +559,7 @@ function resolveGoombaCollisions() {
 }
 
 
-// Collision Detection for itembuff
+// Collision Detection for itembuff (CHATGPT)
 function itembuffCollisions() {
   obstacles.forEach(obstacle => {
     // Horizontal collisions (left and right)
@@ -569,13 +627,10 @@ function animate() {
   goomba.draw(); // Create goomba
   goomba.update(); // Goomba update
   itembuff.update(); // Update item buff growing animation
-  title.draw();
-  drawCountdownTimer();
+  title.draw(); // Title Sign draw
+  drawCountdownTimer(); // Countdown draw
 }
 
 // Event listener
 addEventListener('keydown', handleKeyDown);
 addEventListener('keyup', handleKeyUp);
-
-startCountdown();
-animate();
