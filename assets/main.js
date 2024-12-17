@@ -30,6 +30,22 @@ goombaImageL.src = 'assets/mario-assets/goomba-l.png'; // Goomba left
 const goombaImageR = new Image();
 goombaImageR.src = 'assets/mario-assets/goomba-r.png'; // Goomba right
 
+// Playeriin model 2
+const marioIdleB = new Image();
+marioIdleB.src = 'assets/mario-assets/mario/big/bmario-idle.png'; // Mario Idle BIG
+
+const marioRun1B = new Image();
+marioRun1B.src = 'assets/mario-assets/mario/big/bmario-run1.png'; // Mario run 1 BIG
+
+const marioRun2B = new Image();
+marioRun2B.src = 'assets/mario-assets/mario/big/bmario-run2.png'; // Mario run 2 BIG
+
+const marioRun3B = new Image();
+marioRun3B.src = 'assets/mario-assets/mario/big/bmario-run3.png'; // Mario run 3 BIG
+
+const marioJumpB = new Image();
+marioJumpB.src = 'assets/mario-assets/mario/big/bmario-jump.png'; // Mario run 4 BIG
+
 // Objectuudiin model
 
 const obstacleImage1 = new Image();
@@ -43,6 +59,9 @@ obstacleImage0.src = 'assets/mario-assets/brick.png'; // Brick
 
 const obstacleImageL = new Image();
 obstacleImageL.src = 'assets/mario-assets/luckybox/1.png'; // Luckybox default
+
+const obstacleEmpty = new Image();
+obstacleEmpty.src = 'assets/mario-assets/empty.png'; // Luckybox default
 
 const itemBuff = new Image();
 itemBuff.src = 'assets/mario-assets/buff-mushroom.png' // Buff mushroom
@@ -137,7 +156,7 @@ const player = {
 
 // Goomba object
 const goomba = {
-  position: { x: 800, y: 370 },
+  position: { x: 600, y: 100 },
   velocity: { x: 0.4, y: 0 }, // Goomba speed
   width: 26,
   height: 26,
@@ -155,7 +174,7 @@ const goomba = {
     // Zuun baruun hudulguun
     this.position.x += this.velocity.x;
 
-    // Usreh unah (odoohondoo hereggu)
+    // deeshee dooshoo
     this.position.y += this.velocity.y;
 
     // Gravity
@@ -184,34 +203,47 @@ setInterval(() => {
 
 // itembuff
 const itembuff = {
-  position: { x: 427, y: 225 },
-  velocity: { x: 0.4, y: 0 },
+  position: { x: 427, y: 100},
+  velocity: { x: 0.4, y: 0 }, // Goomba speed
   width: 26,
-  height: 0, // Initial height is 0 for growing animation
+  height: 26, // Initial height is 0 for growing animation
   maxHeight: 30, // Max height for the growing item buff
   gravity: 0.2,
-  default: itemBuff, // Item buff default img
+  goombaIdle: itemBuff, // Goomba default img
   visible: false, // Whether the item buff is visible or not
 
   draw: function () {
-    if (this.visible) {
-      // Draw the item buff with growing height
-      c.drawImage(this.default, this.position.x, this.position.y - this.height, this.width, this.height);
-    }
-  },
+    c.drawImage(this.goombaIdle, this.position.x, this.position.y, this.width, this.height);
 
+  },
   update: function () {
+    // Zuun baruun hudulguun
     if (this.visible && this.height < this.maxHeight) {
       // Increase the height for growing animation
       this.height += 1;
     }
-  }
+    if (this.visible == true) {
+      this.position.x += this.velocity.x;
+      console.log(this.gravity)
+      // deeshee dooshoo
+      this.position.y += this.velocity.y;
+
+      // Gravity
+      if (this.position.y + this.height < canvas.height - 75) { // 75 Spacing from bottom ground canvas
+        this.velocity.y += this.gravity;
+      } else {
+        this.velocity.y = 0;
+        this.position.y = canvas.height - this.height - 75; // 75 Spacing from bottom ground canvas
+      }
+    }
+
+  },
 };
 
 const luckybox = {
   position: { x: 427, y: 224 },
   width: 27,
-  height: 27.5,
+  height: 27,
   image: obstacleImageL, // Luckybox image
   draw: function () {
     c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
@@ -224,7 +256,7 @@ const obstacles = [
   { position: { x: 850, y: 245 }, width: 50, height: 80, image: obstacleImage2 }, // Medium pipe
   { position: { x: 400, y: 224 }, width: 27, height: 27, image: obstacleImage0 }, // Brick
   { position: { x: 454, y: 224 }, width: 27, height: 27, image: obstacleImage0 }, // Brick
-  { position: { x: 427, y: 224 }, width: 27, height: 27.5, image: obstacleImageL } // Luckybox
+  { position: { x: 427, y: 224 }, width: 27, height: 27, image: obstacleImageL } // Luckybox
 ];
 
 // Draw obstacles
@@ -232,7 +264,7 @@ function drawObstacles() {
   obstacles.forEach(obstacle => {
     c.drawImage(obstacle.image, obstacle.position.x, obstacle.position.y, obstacle.width, obstacle.height);
   });
-  luckybox.draw()
+  luckybox.draw();
   itembuff.draw(); // Draw the item buff
 }
 
@@ -268,6 +300,7 @@ function resolveCollisions() {
       player.position.x + player.width > obstacle.position.x &&
       player.position.x < obstacle.position.x + obstacle.width
     ) {
+      // Check for bottom collision with lucky box
       if (
         player.velocity.y > 0 && // Falling
         player.position.y + player.height <= obstacle.position.y &&
@@ -278,6 +311,7 @@ function resolveCollisions() {
         player.position.y = obstacle.position.y - player.height; // Snap to obstacle top
       }
 
+      // Check for upward collision with the lucky box (jumping)
       if (
         player.velocity.y < 0 && // Jumping
         player.position.y >= obstacle.position.y + obstacle.height &&
@@ -285,7 +319,11 @@ function resolveCollisions() {
       ) {
         player.velocity.y = 0; // Stop upward movement
         player.position.y = obstacle.position.y + obstacle.height; // Snap below obstacle
-        itembuff.visible = true; // Show the item buff
+        // Player hits the lucky box from below
+        if (obstacle.image === obstacleImageL) { // Check if it's the lucky box
+          itembuff.visible = true; // Show the item buff
+          luckybox.image = obstacleEmpty
+        }
       }
     }
   });
@@ -342,7 +380,7 @@ function clearCanvas() {
 // Collision Detection for Goomba
 function resolveGoombaCollisions() {
   obstacles.forEach(obstacle => {
-    // Check goomba right side
+    // Horizontal collisions (left and right)
     if (
       goomba.position.y + goomba.height > obstacle.position.y &&
       goomba.position.y < obstacle.position.y + obstacle.height
@@ -352,25 +390,51 @@ function resolveGoombaCollisions() {
         goomba.position.x + goomba.width <= obstacle.position.x &&
         goomba.position.x + goomba.width + goomba.velocity.x >= obstacle.position.x
       ) {
-        goomba.velocity.x = -0.4; // Hursen uyd butsah (reverse)
+        goomba.velocity.x = -0.4; // Reverse direction when colliding from the right
       }
 
-      // Check goomba left side
       if (
         goomba.velocity.x < 0 && // Move left
         goomba.position.x >= obstacle.position.x + obstacle.width &&
         goomba.position.x + goomba.velocity.x <= obstacle.position.x + obstacle.width
       ) {
-        goomba.velocity.x = 0.4; // Hursen uyd butsah (reverse)
+        goomba.velocity.x = 0.4; // Reverse direction when colliding from the left
+      }
+    }
+
+    // Vertical collisions (top and bottom)
+    if (
+      goomba.position.x + goomba.width > obstacle.position.x &&
+      goomba.position.x < obstacle.position.x + obstacle.width
+    ) {
+      // Check for bottom collision (falling)
+      if (
+        goomba.velocity.y > 0 && // Falling
+        goomba.position.y + goomba.height <= obstacle.position.y &&
+        goomba.position.y + goomba.height + goomba.velocity.y >= obstacle.position.y
+      ) {
+        goomba.velocity.y = 0; // Stop falling
+        goomba.position.y = obstacle.position.y - goomba.height; // Snap to the top of the obstacle
+      }
+
+      // Check for top collision (going up)
+      if (
+        goomba.velocity.y < 0 && // Moving up
+        goomba.position.y >= obstacle.position.y + obstacle.height &&
+        goomba.position.y + goomba.velocity.y <= obstacle.position.y + obstacle.height
+      ) {
+        goomba.velocity.y = 0; // Stop upward movement
+        goomba.position.y = obstacle.position.y + obstacle.height; // Snap below the obstacle
       }
     }
   });
 }
 
-// Collision Detection for Goomba
+
+// Collision Detection for itembuff
 function itembuffCollisions() {
   obstacles.forEach(obstacle => {
-    // Check goomba right side
+    // Horizontal collisions (left and right)
     if (
       itembuff.position.y + itembuff.height > obstacle.position.y &&
       itembuff.position.y < obstacle.position.y + obstacle.height
@@ -380,20 +444,47 @@ function itembuffCollisions() {
         itembuff.position.x + itembuff.width <= obstacle.position.x &&
         itembuff.position.x + itembuff.width + itembuff.velocity.x >= obstacle.position.x
       ) {
-        goomba.velocity.x = -0.4; // Hursen uyd butsah (reverse)
+        itembuff.velocity.x = -0.4; // Reverse direction when colliding from the right
       }
 
-      // Check goomba left side
       if (
         itembuff.velocity.x < 0 && // Move left
         itembuff.position.x >= obstacle.position.x + obstacle.width &&
         itembuff.position.x + itembuff.velocity.x <= obstacle.position.x + obstacle.width
       ) {
-        itembuff.velocity.x = 0.4; // Hursen uyd butsah (reverse)
+        itembuff.velocity.x = 0.4; // Reverse direction when colliding from the left
+      }
+    }
+
+    // Vertical collisions (top and bottom)
+    if (
+      itembuff.position.x + itembuff.width > obstacle.position.x &&
+      itembuff.position.x < obstacle.position.x + obstacle.width
+    ) {
+      // Check for bottom collision (falling)
+      if (
+        itembuff.velocity.y > 0 && // Falling
+        itembuff.position.y + itembuff.height <= obstacle.position.y &&
+        itembuff.position.y + itembuff.height + itembuff.velocity.y >= obstacle.position.y
+      ) {
+        itembuff.velocity.y = 0; // Stop falling
+        itembuff.position.y = obstacle.position.y - itembuff.height; // Snap to the top of the obstacle
+      }
+
+      // Check for top collision (going up)
+      if (
+        itembuff.velocity.y < 0 && // Moving up
+        itembuff.position.y >= obstacle.position.y + obstacle.height &&
+        itembuff.position.y + itembuff.velocity.y <= obstacle.position.y + obstacle.height
+      ) {
+        itembuff.velocity.y = 0; // Stop upward movement
+        itembuff.position.y = obstacle.position.y + obstacle.height; // Snap below the obstacle
       }
     }
   });
 }
+
+
 
 
 
