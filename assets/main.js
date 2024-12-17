@@ -5,6 +5,10 @@ const c = canvas.getContext('2d');
 canvas.width = 1100;
 canvas.height = 400;
 
+
+const welcomefield = new Image();
+welcomefield.src = 'assets/mario-assets/test2.png'
+
 const testlvl = new Image();
 testlvl.src = 'assets/mario-assets/test-lvl.png'; // Testing level for canvas
 
@@ -30,7 +34,9 @@ goombaImageL.src = 'assets/mario-assets/goomba-l.png'; // Goomba left
 const goombaImageR = new Image();
 goombaImageR.src = 'assets/mario-assets/goomba-r.png'; // Goomba right
 
-// Playeriin model 2
+ani: [marioRun1, marioRun2, marioRun3]
+
+// Player png big
 const marioIdleB = new Image();
 marioIdleB.src = 'assets/mario-assets/mario/big/bmario-idle.png'; // Mario Idle BIG
 
@@ -75,6 +81,50 @@ const luckyBoxImages = [
   'assets/mario-assets/luckybox/5.png'
 ];
 
+//Welcome field
+const title = {
+  position: { x: 35, y: 25 },
+  width: 250,
+  height: 150,
+  image: welcomefield,
+  draw: function () {
+    c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+  }
+}
+ 
+//Count down timer
+let timeRemaining = 400;
+function formatTime(seconds) {
+  const minutes = Math.floor(seconds);
+  const remainingSeconds = seconds;
+  if (remainingSeconds < 10) {
+    remainingSeconds = '0' + remainingSeconds;
+  }
+  return remainingSeconds;
+}
+function startCountdown() {
+  const timerElement = document.getElementById('timer');
+  const countdownInterval = setInterval(function () {
+    timerElement.innerText = formatTime(timeRemaining);
+    if (timeRemaining <= 0) {
+      clearInterval(countdownInterval);
+      timerElement.innerText = 'Time is up!';
+    } else {
+      timeRemaining--;
+    }
+  }, 1000);
+}
+function drawCountdownTimer() {
+  // c.font = 'bold italic 40px ';
+  c.font = "20px 'Press Start 2P', cursive";
+  c.fillStyle = 'white';
+  c.textAlign = 'left';
+  c.textBaseline = 'top';
+ 
+  c.fillText('Time', 800, 15);
+  c.fillText(formatTime(timeRemaining), 810, 45);
+}
+
 let luckyBoxIndex = 0;
 
 // Luckybox animate function
@@ -99,6 +149,7 @@ const player = {
   frameCounter: 0,
   dir: 'right', // Default right checking Left ! Right
   hitLuckyBox: false, // New flag to track if the player hit the lucky box
+  isBuffed: false, // New flag for buffed state
   draw: function () {
     c.save(); // Save the canvas state
 
@@ -138,17 +189,16 @@ const player = {
 
     // If player jump change idle img to Jumping img
     if (this.velocity.y < 0 || this.velocity.y > 0) {
-      this.marioIdle = marioJump;
+      this.marioIdle = this.isBuffed ? marioJumpB : marioJump; // If buffed, use the big version
     } else if (this.velocity.x !== 0) {
-
       // If player running change idle img to Jumping img
       this.frameCounter++;
       if (this.frameCounter % 10 === 0) { // Zurag soligdoh hurd default 20 frame
         this.frameIndex = (this.frameIndex + 1) % this.ani.length;
-        this.marioIdle = this.ani[this.frameIndex];
+        this.marioIdle = this.isBuffed ? [marioRun1B, marioRun2B, marioRun3B][this.frameIndex] : this.ani[this.frameIndex];
       }
     } else {
-      this.marioIdle = marioIdle; // Yuch hiigeegu uyd butsd idle img
+      this.marioIdle = this.isBuffed ? marioIdleB : marioIdle; // Yuch hiigeegu uyd butsd idle img
     }
   }
 };
@@ -201,9 +251,9 @@ setInterval(() => {
 }, 300);
 
 
-// itembuff
+// itembuff object
 const itembuff = {
-  position: { x: 427, y: 100},
+  position: { x: 427, y: 100 },
   velocity: { x: 0.4, y: 0 }, // Goomba speed
   width: 26,
   height: 26, // Initial height is 0 for growing animation
@@ -214,8 +264,8 @@ const itembuff = {
 
   draw: function () {
     c.drawImage(this.goombaIdle, this.position.x, this.position.y, this.width, this.height);
-
   },
+
   update: function () {
     // Zuun baruun hudulguun
     if (this.visible && this.height < this.maxHeight) {
@@ -240,6 +290,7 @@ const itembuff = {
   },
 };
 
+
 const luckybox = {
   position: { x: 427, y: 224 },
   width: 27,
@@ -254,9 +305,9 @@ const luckybox = {
 const obstacles = [
   { position: { x: 600, y: 275 }, width: 50, height: 50, image: obstacleImage1 }, // Small pipe
   { position: { x: 850, y: 245 }, width: 50, height: 80, image: obstacleImage2 }, // Medium pipe
-  { position: { x: 400, y: 224 }, width: 27, height: 27, image: obstacleImage0 }, // Brick
-  { position: { x: 454, y: 224 }, width: 27, height: 27, image: obstacleImage0 }, // Brick
-  { position: { x: 427, y: 224 }, width: 27, height: 27, image: obstacleImageL } // Luckybox
+  { position: { x: 400, y: 224 }, width: 27, height: 27, image: obstacleImage0, type: "brick" }, // Brick
+  { position: { x: 454, y: 224 }, width: 27, height: 27, image: obstacleImage0, type: "brick" }, // Brick
+  { position: { x: 427, y: 224 }, width: 27, height: 27, image: obstacleImageL, type: "luckyBox" } // Luckybox
 ];
 
 // Draw obstacles
@@ -320,10 +371,29 @@ function resolveCollisions() {
         player.velocity.y = 0; // Stop upward movement
         player.position.y = obstacle.position.y + obstacle.height; // Snap below obstacle
         // Player hits the lucky box from below
-        if (obstacle.image === obstacleImageL) { // Check if it's the lucky box
+        if (player.position.y == 427 && player.position.x == 224) { // Check if it's the lucky box
+          console.log('ds')
           itembuff.visible = true; // Show the item buff
           luckybox.image = obstacleEmpty
         }
+      }
+    }
+    if (
+      player.position.x + player.width > itembuff.position.x &&
+      player.position.x < itembuff.position.x + itembuff.width &&
+      player.position.y + player.height > itembuff.position.y &&
+      player.position.y < itembuff.position.y + itembuff.height
+    ) {
+
+      // Player buff check
+      if (!player.isBuffed) {
+        player.isBuffed = true; // Set the player as buffed
+        itembuff.visible = false;
+        itembuff.height = 0;
+        player.width = 32; // Increase the player size (for big Mario)
+        player.height = 60; // Increase the player height (for big Mario)
+        ani: [marioRun1B, marioRun2B, marioRun3B]; // Mario running animation array
+        marioIdle: marioIdleB;
       }
     }
   });
@@ -485,9 +555,6 @@ function itembuffCollisions() {
 }
 
 
-
-
-
 // frame by frame window updater
 function animate() {
   window.requestAnimationFrame(animate);
@@ -496,16 +563,19 @@ function animate() {
   updatePlayerVelocity(); // Player horizontal movement
   resolveCollisions(); // Handle collisions
   resolveGoombaCollisions(); // Goomba colission
-  itembuffCollisions();
+  itembuffCollisions(); // Check collision with buff item
   player.update(); // Player update
   player.draw(); // Create player
-  goomba.draw() // Create goomba
-  goomba.update() // Goomba update
+  goomba.draw(); // Create goomba
+  goomba.update(); // Goomba update
   itembuff.update(); // Update item buff growing animation
+  title.draw();
+  drawCountdownTimer();
 }
 
 // Event listener
 addEventListener('keydown', handleKeyDown);
 addEventListener('keyup', handleKeyUp);
 
+startCountdown();
 animate();
