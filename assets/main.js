@@ -68,7 +68,7 @@ setInterval(updateLuckyBoxImage, 190);
 
 // Player object
 const player = {
-  position: { x: 100, y: 100 },
+  position: { x: 350, y: 100 },
   velocity: { x: 0, y: 0 },
   width: 25,
   height: 25,
@@ -79,7 +79,7 @@ const player = {
   frameIndex: 0,
   frameCounter: 0,
   dir: 'right', // Default right checking Left ! Right
-
+  hitLuckyBox: false, // New flag to track if the player hit the lucky box
   draw: function () {
     c.save(); // Save the canvas state
 
@@ -124,16 +124,16 @@ const player = {
 
       // If player running change idle img to Jumping img
       this.frameCounter++;
-      if (this.frameCounter % 20 === 0) { // Zurag soligdoh hurd default 20 frame
+      if (this.frameCounter % 10 === 0) { // Zurag soligdoh hurd default 20 frame
         this.frameIndex = (this.frameIndex + 1) % this.ani.length;
         this.marioIdle = this.ani[this.frameIndex];
       }
     } else {
       this.marioIdle = marioIdle; // Yuch hiigeegu uyd butsd idle img
-
     }
   }
 };
+
 
 // Goomba object
 const goomba = {
@@ -151,7 +151,6 @@ const goomba = {
     c.strokeStyle = 'red';
     c.strokeRect(this.position.x, this.position.y, this.width, this.height);
   },
-
   update: function () {
     // Zuun baruun hudulguun
     this.position.x += this.velocity.x;
@@ -167,8 +166,6 @@ const goomba = {
       this.position.y = canvas.height - this.height - 75; // 75 Spacing from bottom ground canvas
     }
   },
-
-
   // Animation
   toggleImage: function () {
     if (this.goombaIdle === goombaImageL) { // Goomba idle
@@ -185,37 +182,40 @@ setInterval(() => {
 }, 300);
 
 
-// Goomba object
+// itembuff
 const itembuff = {
-  position: { x: 427, y: 200 },
-  velocity: { x: 0.4, y: 0 }, // Goomba speed
+  position: { x: 427, y: 225 },
+  velocity: { x: 0.4, y: 0 },
   width: 26,
-  height: 26,
+  height: 0, // Initial height is 0 for growing animation
+  maxHeight: 30, // Max height for the growing item buff
   gravity: 0.2,
-  default: itemBuff, // Goomba default img
+  default: itemBuff, // Item buff default img
+  visible: false, // Whether the item buff is visible or not
 
   draw: function () {
-    c.drawImage(this.default, this.position.x, this.position.y, this.width, this.height);
-
-    // Debug border
-  },
-
-  update: function () {
-    // Zuun baruun hudulguun
-    this.position.x += this.velocity.x;
-
-    // Usreh unah (odoohondoo hereggu)
-    this.position.y += this.velocity.y;
-
-    // Gravity
-    if (this.position.y + this.height < canvas.height - 75) { // 75 Spacing from bottom ground canvas
-      this.velocity.y += this.gravity;
-    } else {
-      this.velocity.y = 0;
-      this.position.y = canvas.height - this.height - 75; // 75 Spacing from bottom ground canvas
+    if (this.visible) {
+      // Draw the item buff with growing height
+      c.drawImage(this.default, this.position.x, this.position.y - this.height, this.width, this.height);
     }
   },
 
+  update: function () {
+    if (this.visible && this.height < this.maxHeight) {
+      // Increase the height for growing animation
+      this.height += 1;
+    }
+  }
+};
+
+const luckybox = {
+  position: { x: 427, y: 224 },
+  width: 27,
+  height: 27.5,
+  image: obstacleImageL, // Luckybox image
+  draw: function () {
+    c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+  }
 };
 
 // Obstacles
@@ -232,6 +232,8 @@ function drawObstacles() {
   obstacles.forEach(obstacle => {
     c.drawImage(obstacle.image, obstacle.position.x, obstacle.position.y, obstacle.width, obstacle.height);
   });
+  luckybox.draw()
+  itembuff.draw(); // Draw the item buff
 }
 
 // Collision Detection and Resolution by (CHATGPT)
@@ -283,6 +285,7 @@ function resolveCollisions() {
       ) {
         player.velocity.y = 0; // Stop upward movement
         player.position.y = obstacle.position.y + obstacle.height; // Snap below obstacle
+        itembuff.visible = true; // Show the item buff
       }
     }
   });
@@ -299,16 +302,14 @@ const keys = {
 function handleKeyDown(e) {
   switch (e.key) {
     case 'w':
-      if (player.velocity.y === 0){ player.velocity.y = player.jumpVelocity; player.gravity = 0.40 }
+      if (player.velocity.y === 0) { player.velocity.y = player.jumpVelocity; player.gravity = 0.40 }
       break;
     case 'a':
       keys.a.pressed = true;
-      player.gravity = 0.40;
       player.dir = 'left'; // Zuun
       break;
     case 'd':
       keys.d.pressed = true;
-      player.gravity = 0.40;
       player.dir = 'right'; // Baruun
       break;
   }
@@ -326,16 +327,10 @@ function handleKeyUp(e) {
   }
 }
 
-if (keys.w.pressed === true, keys.a.pressed === true, keys.d.pressed === true) {
-  player.gravity = 0.15
-  console.log('test');
-  
-}
-
 function updatePlayerVelocity() {
   player.velocity.x = 0; // Stop movement by default
-  if (keys.a.pressed) player.velocity.x = -1; // Move left
-  if (keys.d.pressed) player.velocity.x = 1; // Move right
+  if (keys.a.pressed) { player.velocity.x = -2.5; player.gravity = 0.40; } // Move left
+  if (keys.d.pressed) { player.velocity.x = 2.5; player.gravity = 0.40; } // Move right
 }
 
 // Clear the canvas
@@ -372,6 +367,35 @@ function resolveGoombaCollisions() {
   });
 }
 
+// Collision Detection for Goomba
+function itembuffCollisions() {
+  obstacles.forEach(obstacle => {
+    // Check goomba right side
+    if (
+      itembuff.position.y + itembuff.height > obstacle.position.y &&
+      itembuff.position.y < obstacle.position.y + obstacle.height
+    ) {
+      if (
+        itembuff.velocity.x > 0 && // Move right
+        itembuff.position.x + itembuff.width <= obstacle.position.x &&
+        itembuff.position.x + itembuff.width + itembuff.velocity.x >= obstacle.position.x
+      ) {
+        goomba.velocity.x = -0.4; // Hursen uyd butsah (reverse)
+      }
+
+      // Check goomba left side
+      if (
+        itembuff.velocity.x < 0 && // Move left
+        itembuff.position.x >= obstacle.position.x + obstacle.width &&
+        itembuff.position.x + itembuff.velocity.x <= obstacle.position.x + obstacle.width
+      ) {
+        itembuff.velocity.x = 0.4; // Hursen uyd butsah (reverse)
+      }
+    }
+  });
+}
+
+
 
 // frame by frame window updater
 function animate() {
@@ -381,10 +405,12 @@ function animate() {
   updatePlayerVelocity(); // Player horizontal movement
   resolveCollisions(); // Handle collisions
   resolveGoombaCollisions(); // Goomba colission
+  itembuffCollisions();
   player.update(); // Player update
   player.draw(); // Create player
   goomba.draw() // Create goomba
   goomba.update() // Goomba update
+  itembuff.update(); // Update item buff growing animation
 }
 
 // Event listener
