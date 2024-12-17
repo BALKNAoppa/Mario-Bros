@@ -371,7 +371,7 @@ function resolveCollisions() {
         player.velocity.y = 0; // Stop upward movement
         player.position.y = obstacle.position.y + obstacle.height; // Snap below obstacle
         // Player hits the lucky box from below
-        if (player.position.y == 427 && player.position.x == 224) { // Check if it's the lucky box
+        if (obstacle.image === obstacleImageL) { // Check if it's the lucky box
           console.log('ds')
           itembuff.visible = true; // Show the item buff
           luckybox.image = obstacleEmpty
