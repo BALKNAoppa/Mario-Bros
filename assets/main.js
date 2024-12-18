@@ -8,7 +8,9 @@ coinSound.src = 'assets/mario-assets/sfx/coin.wav'; // Coin Sound
 const buffSound = new Audio();
 buffSound.src = 'assets/mario-assets/sfx/mushroom-eat.wav'; // GameOver
 const gameOverSound = new Audio();
-gameOverSound.src = 'assets/mario-assets/sfx/gameover.wav'; // GameOver
+gameOverSound.src = 'assets/mario-assets/sfx/death.mp3'; // GameOver
+const goombaDeathsnd = new Audio();
+goombaDeathsnd.src = 'assets/mario-assets/goombadie.mp3'; // GameOver
 
 let snd = document.querySelector('#snd');
 
@@ -28,7 +30,6 @@ function startGame() {
   startScreen.style.display = "none";
   gameStarted = true;
   backgroundMusic.play().catch((error) => {
-    console.error("Audio play failed:", error);
 
   });
   animate();
@@ -49,6 +50,8 @@ backgroundMusic.addEventListener('canplaythrough', () => {
 });
 
 
+
+
 // Sound toggle button and logic
 const soundToggleButton = document.getElementById('sound-toggle-btn');
 let isSoundOn = true;
@@ -58,9 +61,10 @@ function toggleSound() {
     backgroundMusic.play().catch((error) => {
       console.error("Background music play failed:", error);
     });
-    jumpSound.volume = 1;
+    backgroundMusic.volume = 0.8;
+    jumpSound.volume = 0.4;
     coinSound.volume = 1;
-    gameOverSound.volume = 1;
+    gameOverSound.volume = 0.8;
     soundToggleButton.textContent = 'SOUND ON';
   } else {
     backgroundMusic.pause();
@@ -279,7 +283,7 @@ const player = {
 
 // Goomba object
 const goomba = {
-  position: { x: 650},
+  position: { x: 650 },
   velocity: { x: 0.4, y: 0 }, // Goomba speed
   width: 26,
   height: 26,
@@ -322,7 +326,7 @@ setInterval(() => {
 
 // ItemBuff object
 const itembuff = {
-  position: { x: 427, y: 100 },
+  position: { x: 427, y: 190 },
   velocity: { x: 1.5, y: 0 }, // Buff Mushroom object
   width: 26,
   height: 0,
@@ -341,7 +345,7 @@ const itembuff = {
       // Increase the height for growing animation
       this.height += 1;
     }
-    if (this.visible == true) {
+    if (this.visible == true && this.height === 30) {
       this.position.x += this.velocity.x;
       console.log(this.gravity)
       // deeshee dooshoo
@@ -489,6 +493,7 @@ function handleKeyDown(e) {
   switch (e.key) {
     case 'w':
       if (player.velocity.y === 0) { player.velocity.y = player.jumpVelocity; player.gravity = 0.40 }
+      jumpSound.volume = 0.3;
       jumpSound.play()
       break;
     case 'a':
@@ -655,6 +660,8 @@ function checkCollision() {
     goomba.width = 0;
     goomba.height = 0;
     console.log('Goomba died');
+    goombaDeathsnd.play();
+    goombaDeathsnd.volume = 1;
   }
 
   function handleGameOver() {
@@ -662,11 +669,11 @@ function checkCollision() {
     gameOverSound.play();
     backgroundMusic.volume = 0; // mute background music
     console.log('Game Over');
-    
+
     // Delay game restart by 3 seconds
     setTimeout(() => {
       restartGame();
-    }, 3000); // 3000 milliseconds = 3 seconds
+    }, 4000); // 3000 milliseconds = 3 seconds
   }
 }
 
@@ -676,20 +683,25 @@ function restartGame() {
   player.velocity = { x: 0, y: 0 }; // Reset player velocity
   player.width = 25;  // Reset player size
   player.height = 25; // Reset player size
-  goomba.width = 27; // Reset Goomba size
-  goomba.height = 27;
-  goomba.position = { x: 700, y: 400}; // Reset Goomba position
-  goomba.velocity = { x: -0.4, y: 0 }; // Reset Goomba velocity
-  
+  goomba.width = 26; // Reset Goomba size
+  goomba.height = 26;
+  goomba.position = { x: 650, y: 400 }; // Reset Goomba position
+  goomba.velocity = { x: 0.4, y: 0 }; // Reset Goomba velocity
+  player.ani = [marioRun1, marioRun2, marioRun3]; // Mario running animation array
+  player.marioIdle = marioIdle;
+  startScreen.style.display = "flex";
+  gameStarted = false;
+
   // Reset other necessary game states
   score = 0; // Reset score
   gameOver = false; // Reset game over flag
 
   // Optionally, restart background music and other sounds
+  backgroundMusic.currentTime = 0;
   backgroundMusic.volume = 1;
   // play background music again if needed
   // backgroundMusic.play();
-  
+
   console.log('Game has restarted');
 }
 
