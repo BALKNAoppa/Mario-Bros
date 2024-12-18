@@ -196,7 +196,7 @@ let gameOver = false;
 
 // Player object
 const player = {
-  position: { x: 350, y: 100 },
+  position: { x: 100, y: 100 },
   velocity: { x: 0, y: 0 },
   width: 25,
   height: 25,
@@ -279,7 +279,7 @@ const player = {
 
 // Goomba object
 const goomba = {
-  position: { x: 600, y: 100 },
+  position: { x: 650},
   velocity: { x: 0.4, y: 0 }, // Goomba speed
   width: 26,
   height: 26,
@@ -640,7 +640,7 @@ function checkCollision() {
     player.position.x + player.width > goomba.position.x &&
     player.position.x < goomba.position.x + goomba.width
   ) {
-    if (player.position.y + player.height <= goomba.position.y + 5) {
+    if (player.position.y + player.height <= goomba.position.y + 10) {
       handleGoombaDeath();
       player.velocity.y = player.jumpVelocity;
     } else {
@@ -650,18 +650,49 @@ function checkCollision() {
 
   function handleGoombaDeath() {
     //goomba.dead = true;
-    goomba.velocity.x = 0; // hodolgoongui bolno
-
-    // alga bolno
+    goomba.velocity.x = 0; // Goomba stops moving
+    // Goomba disappears
     goomba.width = 0;
     goomba.height = 0;
+    console.log('Goomba died');
   }
 
   function handleGameOver() {
     gameOver = true;
-    // goomba.dead = false
+    gameOverSound.play();
+    backgroundMusic.volume = 0; // mute background music
+    console.log('Game Over');
+    
+    // Delay game restart by 3 seconds
+    setTimeout(() => {
+      restartGame();
+    }, 3000); // 3000 milliseconds = 3 seconds
   }
 }
+
+function restartGame() {
+  // Reset player position, score, and any other necessary game states
+  player.position = { x: 100, y: 100 }; // Example: Reset player position
+  player.velocity = { x: 0, y: 0 }; // Reset player velocity
+  player.width = 25;  // Reset player size
+  player.height = 25; // Reset player size
+  goomba.width = 27; // Reset Goomba size
+  goomba.height = 27;
+  goomba.position = { x: 700, y: 400}; // Reset Goomba position
+  goomba.velocity = { x: -0.4, y: 0 }; // Reset Goomba velocity
+  
+  // Reset other necessary game states
+  score = 0; // Reset score
+  gameOver = false; // Reset game over flag
+
+  // Optionally, restart background music and other sounds
+  backgroundMusic.volume = 1;
+  // play background music again if needed
+  // backgroundMusic.play();
+  
+  console.log('Game has restarted');
+}
+
 
 
 // frame by frame window updater
