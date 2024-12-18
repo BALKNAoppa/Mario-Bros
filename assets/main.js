@@ -174,19 +174,30 @@ function startCountdown() {
   }, 1000);
 }
 
-// Timer Text Style etc
+// Additional details
+ 
+let score = 0;
+
 function drawCountdownTimer() {
   c.font = "20px 'Press Start 2P', cursive";
   c.fillStyle = 'white';
   c.textAlign = 'left';
   c.textBaseline = 'top';
-
+  
+  // Time label
   c.fillText('Time', 800, 15);
   c.fillText(formatTime(timeRemaining), 810, 45);
+  
+  // Score label
+  c.fillText('Score', 600, 15);  
+  c.fillText(score.toString().padStart(4, '0'), 615, 45); // Pad the score with leading zeros to 4 digits
+  
+  // Map label
+  c.fillText('World', 410, 15);
+  c.fillText('1-1', 430, 45);  
+  
+  // Developers text
   c.font = "15px 'Press Start 2P', cursive";
-
-  // Developers
-
   c.fillText('Ariuka,', 40, 185);
   c.fillText('Babu,', 40, 210);
   c.fillText('Baagii,', 40, 235);
@@ -194,6 +205,9 @@ function drawCountdownTimer() {
   c.fillText('Odko', 165, 210);
   c.fillText('Battur', 165, 235);
 }
+
+ 
+ 
 
 // Game Over
 let gameOver = false;
@@ -328,7 +342,7 @@ setInterval(() => {
 const itembuff = {
   position: { x: 427, y: 190 },
   velocity: { x: 1.5, y: 0 }, // Buff Mushroom object
-  width: 26,
+  width: 27,
   height: 0,
   maxHeight: 30, // Max grow height
   gravity: 0.2,
@@ -468,6 +482,7 @@ function resolveCollisions() {
       // Player buff check
       if (!player.isBuffed) {
         buffSound.play()
+        score += 500
         player.isBuffed = true; // Set the player as buffed
         itembuff.visible = false;
         itembuff.height = 0;
@@ -638,6 +653,54 @@ function itembuffCollisions() {
   });
 }
 
+// Clear the canvas
+function clearCanvas() {
+  // Canvas цэвэрлэх
+  c.clearRect(0, 0, canvas.width, canvas.height);
+ 
+  // **Арын дэвсгэрийг бүтнээр нь зурах**
+  c.drawImage(testlvl, 0, 0, canvas.width, canvas.height);
+ 
+  // **Crop хийсэн хэсгийг зурах**
+  const sx = 0;
+  const sy = 0;
+  const sw = 40;
+  const sh = 100;
+ 
+  const dx = 950;
+  const dy = canvas.height - 80;
+  const dw = 50;
+  const dh = 100;
+ 
+  // Crop хийсэн хэсгийг зурах
+  c.drawImage(testlvl, sx, sy, sw, sh, dx, dy, dw, dh);
+ 
+// image: Ашиглах зураг (зургийн объект).
+// sx, sy: Эх зургийн хаанаас эхэлж crop хийх координат.
+// sw, sh: Crop хийх өргөн (width) ба өндөр (height).
+// dx, dy: Canvas дээр зурах байрлалын координат.
+// dw, dh: Canvas дээр зурах өргөн ба өндөр.
+
+}
+
+const gaps = [
+  { x: 950, y: canvas.height - 75, width: 30, height: 75 }
+];
+ 
+function checkGapCollision() {
+  gaps.forEach(gap => {
+    if (player.position.y + player.height >= gap.y && player.position.x + player.width >= gap.x && player.position.x <= gap.x + gap.width) {
+      gameOver = true;
+      gameOverSound.play();
+      backgroundMusic.volume = 0; // Background music zogsoono
+      // Delay the reload by 4 seconds (4000 milliseconds)
+      setTimeout(() => {
+        location.reload();
+      }, 2800); // 4000 ms = 4 seconds
+    }
+  });
+}
+
 function checkCollision() {
   if (
     player.position.y + player.height > goomba.position.y &&
@@ -655,19 +718,20 @@ function checkCollision() {
 
   function handleGoombaDeath() {
     //goomba.dead = true;
-    goomba.velocity.x = 0; // Goomba stops moving
-    // Goomba disappears
+    goomba.velocity.x = 0; // Goomba hudulguungui bolno
+    // Goomba alga bolno
     goomba.width = 0;
     goomba.height = 0;
     console.log('Goomba died');
     goombaDeathsnd.play();
     goombaDeathsnd.volume = 1;
+    score += 1000
   }
 
   function handleGameOver() {
     gameOver = true;
     gameOverSound.play();
-    backgroundMusic.volume = 0; // mute background music
+    backgroundMusic.volume = 0; // Background music zogsoono
     console.log('Game Over');
 
     // Delay game restart by 3 seconds
@@ -678,31 +742,7 @@ function checkCollision() {
 }
 
 function restartGame() {
-  // Reset player position, score, and any other necessary game states
-  player.position = { x: 100, y: 100 }; // Example: Reset player position
-  player.velocity = { x: 0, y: 0 }; // Reset player velocity
-  player.width = 25;  // Reset player size
-  player.height = 25; // Reset player size
-  goomba.width = 26; // Reset Goomba size
-  goomba.height = 26;
-  goomba.position = { x: 650, y: 400 }; // Reset Goomba position
-  goomba.velocity = { x: 0.4, y: 0 }; // Reset Goomba velocity
-  player.ani = [marioRun1, marioRun2, marioRun3]; // Mario running animation array
-  player.marioIdle = marioIdle;
-  startScreen.style.display = "flex";
-  gameStarted = false;
-
-  // Reset other necessary game states
-  score = 0; // Reset score
-  gameOver = false; // Reset game over flag
-
-  // Optionally, restart background music and other sounds
-  backgroundMusic.currentTime = 0;
-  backgroundMusic.volume = 1;
-  // play background music again if needed
-  // backgroundMusic.play();
-
-  console.log('Game has restarted');
+  location.reload()
 }
 
 
@@ -717,6 +757,7 @@ function animate() {
   resolveGoombaCollisions(); // Goomba colission
   itembuffCollisions(); // Check collision with buff item
   checkCollision();
+  checkGapCollision();
   player.update(); // Player update
   player.draw(); // Create player
   goomba.draw(); // Create goomba
