@@ -100,6 +100,8 @@ const goombaImageL = new Image();
 goombaImageL.src = 'assets/mario-assets/goomba-l.png'; // Goomba left
 const goombaImageR = new Image();
 goombaImageR.src = 'assets/mario-assets/goomba-r.png'; // Goomba right
+const marioDeath = new Image();
+marioDeath.src = 'assets/mario-assets/mario/small/mario-death.png'; // Goomba right
 
 // Buffed Player
 const marioIdleB = new Image();
@@ -220,8 +222,22 @@ const player = {
         this.width,
         this.height
       );
+    } else if (gameOver) {
+      c.drawImage(
+        marioDeath,
+        this.position.x,
+        this.position.y,
+        this.width,
+        this.height
+      );
     } else {
-      c.drawImage(this.marioIdle, this.position.x, this.position.y, this.width, this.height);
+      c.drawImage(
+        this.marioIdle,
+        this.position.x,
+        this.position.y,
+        this.width,
+        this.height
+      );
     }
     c.restore(); // Restore the canvas state
   },
@@ -230,6 +246,11 @@ const player = {
     // Update position
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
+
+    if (gameOver) {
+      this.velocity.y += this.gravity;
+      return;
+    }
 
     // Player gravity // Velocity = hurd // Gravity = undur
     if (this.position.y + this.height < canvas.height - 75) { // 75 Spacing from bottom ground canvas
@@ -302,9 +323,9 @@ setInterval(() => {
 // ItemBuff object
 const itembuff = {
   position: { x: 427, y: 100 },
-  velocity: { x: 0.4, y: 0 }, // Buff Mushroom object
+  velocity: { x: 1.5, y: 0 }, // Buff Mushroom object
   width: 26,
-  height: 26,
+  height: 0,
   maxHeight: 30, // Max grow height
   gravity: 0.2,
   goombaIdle: itemBuff, // Default
@@ -446,8 +467,8 @@ function resolveCollisions() {
         player.isBuffed = true; // Set the player as buffed
         itembuff.visible = false;
         itembuff.height = 0;
-        player.width = 26; // Increase the player size (for big Mario)
-        player.height = 40; // Increase the player height (for big Mario)
+        player.width = 32; // Increase the player size (for big Mario)
+        player.height = 47; // Increase the player height (for big Mario)
         ani: [marioRun1B, marioRun2B, marioRun3B]; // Mario running animation array
         marioIdle: marioIdleB;
       }
@@ -572,7 +593,7 @@ function itembuffCollisions() {
         itembuff.position.x + itembuff.width <= obstacle.position.x &&
         itembuff.position.x + itembuff.width + itembuff.velocity.x >= obstacle.position.x
       ) {
-        itembuff.velocity.x = -0.4; // Reverse direction when colliding from the right
+        itembuff.velocity.x = -1.5; // Reverse direction when colliding from the right
       }
 
       if (
@@ -580,7 +601,7 @@ function itembuffCollisions() {
         itembuff.position.x >= obstacle.position.x + obstacle.width &&
         itembuff.position.x + itembuff.velocity.x <= obstacle.position.x + obstacle.width
       ) {
-        itembuff.velocity.x = 0.4; // Reverse direction when colliding from the left
+        itembuff.velocity.x = 1.5; // Reverse direction when colliding from the left
       }
     }
 
@@ -612,6 +633,36 @@ function itembuffCollisions() {
   });
 }
 
+function checkCollision() {
+  if (
+    player.position.y + player.height > goomba.position.y &&
+    player.position.y < goomba.position.y + goomba.height &&
+    player.position.x + player.width > goomba.position.x &&
+    player.position.x < goomba.position.x + goomba.width
+  ) {
+    if (player.position.y + player.height <= goomba.position.y + 5) {
+      handleGoombaDeath();
+      player.velocity.y = player.jumpVelocity;
+    } else {
+      handleGameOver();
+    }
+  }
+
+  function handleGoombaDeath() {
+    //goomba.dead = true;
+    goomba.velocity.x = 0; // hodolgoongui bolno
+
+    // alga bolno
+    goomba.width = 0;
+    goomba.height = 0;
+  }
+
+  function handleGameOver() {
+    gameOver = true;
+    // goomba.dead = false
+  }
+}
+
 
 // frame by frame window updater
 function animate() {
@@ -622,6 +673,7 @@ function animate() {
   resolveCollisions(); // Handle collisions
   resolveGoombaCollisions(); // Goomba colission
   itembuffCollisions(); // Check collision with buff item
+  checkCollision();
   player.update(); // Player update
   player.draw(); // Create player
   goomba.draw(); // Create goomba
