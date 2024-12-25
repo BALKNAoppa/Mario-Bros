@@ -16,8 +16,6 @@ body {
     z-index: 1000;
     flex-direction: column;
 }
-
-
 #start-btn {
     font-family: 'Press Start 2P';
     font-size: 15px;
@@ -26,7 +24,6 @@ body {
     color: white;
     background-color: transparent;
 }
-
 .canvas-container {
     display: flex;
     justify-content: center;
@@ -35,7 +32,6 @@ body {
     width: 100vw;
     position: relative;
 }
-
 #sound-toggle-btn {
 background-color: transparent;
 position: absolute;
@@ -48,8 +44,6 @@ color: white;
 border: none;
 cursor: pointer;
 }
-
-
 .introduction-text{
     font-family: 'Press Start 2P';
     font-size: 15px;
